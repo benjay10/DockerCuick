@@ -1,0 +1,293 @@
+#!/bin/tclsh
+
+# TODO
+# -[x] Use a `--` (or other special token) to forward all following input directly to `docker compose` (no further processing). The `--` is like a subcommand that forwards everything.
+#        dc -- logs --tail=1000 -f virtuoso
+#        same as: docker compose logs --tail=1000 -f virtuoso
+# -[x] Parse the subcommands first via a dictionary, and then via the same type of matching with services, but on a list of subcommands.
+#      So 'a', 'art', 'sta', 'start' (, ...) are equivalent
+# -[x] When only one service given, can we use --no-log-prefix in the output for less columns and easier SPARQL copying?
+# -[x] Support the following syntax
+#        dc u,l virt dispat
+#        same as: dc u virt dispat ; dc l virt dispat
+#      (Multiple subcommands separated by a comma, all subcommands executed for all services in sequence)
+# -[x] Support the following syntax
+#        dc l(-t --no-log-prefix) vendor-d
+#        same as: docker compose logs --tail 1000 -f -t --no-log-prefix vendor-data-distribution
+#      (Arguments to the subcommand, directly forwarded to docker compose)
+# -[x] Support the following syntax
+#        dc e vendor-d curl -X POST http://localhost/healing
+#      (`dc exec` and the next tokens all need to be forwarded to docker compose, only one service is allowed)
+# -[x] Pattern 'modifiers' x, -, and .
+#      * Imagine the services: triplestore, publication-triplestore, migrations-publication-triplestore
+#      * The patters 'tri' would match all three
+#      * `-tri` would match the shortest service name, so triplestore
+#      * `+tri' would match the longest service name, so migrations-publication-triplestore
+#      * `.tri' would match the exact service name, so nothing in this case, but can be used as '.publication-triplestore' as the only way to address that service
+# -[x] Maybe support the following syntax
+#        dc ? virt log
+#      (multiple services for the search subcommand)
+# -[ ] Read files from -f command line arguments and ignore all the rest if they exist
+#      Or maybe not and force the user to have a proper `.env` file.
+
+
+package require Tcl 8.6
+package require tclyaml 0.5
+
+# Constants
+
+set ENV_FILE ".env"
+set DOCKER_COMPOSE "docker compose"
+set DOCKER_COMPOSE_GLOBAL_OPTIONS ""
+
+# Dict of command aliases in pairs (e.g. "a" means "start")
+
+set SUB_COMMAND_ALIASSES [ dict create \
+  a start \
+  o stop \
+  r restart \
+  d down \
+  u up \
+  l logs \
+  s stats \
+  p pull \
+  e exec \
+]
+
+# List of commands that exists
+
+set SUB_COMMANDS { start stop restart down up rm logs stats pull exec }
+
+# Dict of default parameters per subcommand
+
+set SUB_COMMAND_DEFAULTS [ dict create \
+  up "-d" \
+  logs "--tail 1000 -f" \
+]
+
+# Helper functions
+
+proc matchInList { param paramList } {
+  set firstCharacter [ string range $param 0 0 ]
+  if { $firstCharacter eq "+" } {
+    set param [ string range $param 1 end ]
+    set matches [ lsearch -glob -inline -all $paramList "*$param*" ]
+    lrange $matches end end
+  } elseif { $firstCharacter eq "." } {
+    set param [ string range $param 1 end ]
+    set match [ lsearch -exact -inline $paramList "$param" ]
+    if { [ llength $match ] < 1 } {
+      return {}
+    } else {
+      return [ list $match ]
+    }
+  } elseif { $firstCharacter eq "-" } {
+    set param [ string range $param 1 end ]
+    set matches [ lsearch -glob -inline -all $paramList "*$param*" ]
+    lrange $matches 0 0
+  } else {
+    lsearch -glob -inline -all $paramList "*$param*"
+  }
+}
+
+proc serviceNameCompare { a b } {
+  set alength [ string length $a ]
+  set blength [ string length $b ]
+  if { $alength < $blength } {
+    return -1
+  } elseif { $alength > $blength } {
+    return 1
+  } else {
+    string compare $a $b
+  }
+}
+
+proc bracketsUnpaired { tokens } {
+  set openCount [ regexp -all {\[} $tokens ]
+  set closeCount [ regexp -all {\]} $tokens ]
+  expr { $openCount - $closeCount }
+}
+
+# Start with the 'docker-compose.yml' file
+
+set dcFiles { docker-compose.yml }
+
+# Find .env file and read list of docker-compose files out if it
+
+if { [file exists $ENV_FILE] } {
+  set fl [open $ENV_FILE]
+  set data [read $fl]
+  close $fl
+  set lines [split $data \n]
+  foreach l $lines {
+    if { [string match "COMPOSE_FILE=*" $l]} {
+      set separatorIndex [ string first "=" $l ]
+      set files [ string range $l $separatorIndex+1 end ]
+      set files [ split $files ":" ]
+      set dcFiles [ concat $dcFiles $files ]
+    }
+  }
+}
+
+# Only read files once later
+set dcFiles [ lsort -unique $dcFiles ]
+
+# Read all files and create channels per file
+#   The file content needs to be edited to filter anchors `&` and aliases `*` because tclyaml does not like those.
+
+set dcChannels [ lmap file $dcFiles {
+  # When command starts with '|', you can open it as a channel with `open` instead of `exec`
+  set command "|cat $file | sed -e {s/\*/ASTERISK/g} | sed -e {s/\&.*$//g}"
+  open $command
+} ]
+
+# Create a counter of channels that have been read
+# A simple counter is enough with a single threaded script
+set channelsread 0
+
+# Increment the counter on channel read and if all channels read: signal by setting some value on the global `proceed` variable
+proc readChannel {} {
+  global channelsread
+  set channelsread [ incr channelsread ]
+  if { $channelsread == [ llength dcChannels ] } {
+    set ::proceed 1
+  }
+}
+
+# Register listeners on all channels
+foreach channel $dcChannels {
+  fileevent $channel readable { readChannel }
+}
+
+# Wait for all channels to be read
+vwait proceed
+
+# Parse the yaml content
+set yamlDocuments [ lmap channel $dcChannels {
+  tclyaml::read channel $channel
+} ]
+
+set serviceNames {}
+
+# Get from the yaml contents the service definitions in 1 big list
+foreach yamlDocument $yamlDocuments {
+  set documentContent [ lindex $yamlDocument 0 0 ]
+  set d [ dict create {*}$documentContent ]
+  set services [ dict get $d "services" ]
+  set serviceNames [ concat $serviceNames [ dict keys $services ] ]
+}
+# Sort by length, then alphabetically
+# This makes taking the longest or shortest path easier
+set serviceNames [ lsort -command serviceNameCompare -unique $serviceNames ]
+
+# Parsing subcommand and arguments from command line
+
+set subCommandArg [ lindex $argv 0 ]
+set params [ lrange $argv 1 end ]
+
+# Special functionality: search for service name or list them all (finishes the script here)
+if { $subCommandArg eq "?" } {
+  puts "Searching for services. Your pattern(s) match(es) the following:"
+  foreach param $params {
+    set matches [ matchInList $param $serviceNames ]
+    puts "$param:"
+    puts "  $matches"
+  }
+  # Stop the program with exit code 0 (return on the top level, success)
+  return 0
+}
+
+# If the subcommand is "--", forward all arguments directly to docker compose. No further processing.
+if { $subCommandArg eq "--" } {
+  set dcCommand "$DOCKER_COMPOSE $params"
+  puts $dcCommand
+  exec {*}$dcCommand 2>@stdout >@stdout <@stdin
+  return 0
+}
+
+# Add some global options based on some conditions
+# Nothing for now
+
+set addedGlobalOptions ""
+
+# Search for all the subcommands that can use brackets (e.g. `u[-d],l[-t -f]`)
+
+while { [ bracketsUnpaired $subCommandArg ] } {
+  set subCommandArg [ string cat $subCommandArg " " [ lindex $params 0 ] ]
+  set params [ lrange $params 1 end ]
+}
+
+set subCommands [ split $subCommandArg "," ]
+
+foreach subCommandWithOpts $subCommands {
+  set subCommandOpts ""
+  regexp {^(\w*)} $subCommandWithOpts -> subCommand
+  regexp {\[(.*)\]} $subCommandWithOpts -> subCommandOpts
+
+  # Match the subcommand to something docker compose understands
+  if { [dict exists $SUB_COMMAND_ALIASSES $subCommand ] } {
+    # Check aliases first
+    set subCommand [ dict get $SUB_COMMAND_ALIASSES $subCommand ]
+  } {
+    # Perform "fuzzy" search
+    set subCommandMatches [ matchInList $subCommand $SUB_COMMANDS ]
+    if { [ llength $subCommandMatches ] > 1 } {
+      puts "ERROR: more than one command matches your pattern: $subCommandMatches"
+      puts "$subCommand:"
+      puts "  $subCommandMatches"
+      # Quit the script
+      return 1
+    } elseif { [ llength $subCommandMatches ] < 1 } {
+      puts "ERROR: not able to find a suitable match for your subcommand: $subCommand"
+    } else {
+      # All other options, take first match
+      set subCommand [ lindex $subCommandMatches 0 ]
+    }
+  }
+  # Add default options to the subcommand options (e.g. 'up -d' instead of 'up')
+  if { [ dict exists $SUB_COMMAND_DEFAULTS $subCommand ] } {
+    set subCommandOpts [ string cat [ dict get $SUB_COMMAND_DEFAULTS $subCommand ] " " $subCommandOpts ]
+  }
+
+  # If the subcommand is "exec", the next argument is a service, the rest is part of the command to execute
+  set executable ""
+  if { $subCommand eq "exec" } {
+    set executable [ lrange $params 1 end ]
+    set params [ lrange $params 0 0 ]
+    puts "Service snippet: $params"
+    puts "Executable: $executable"
+  }
+
+  # Finding services that match params
+
+  set serviceParams [ lmap param $params {
+    set matches [ matchInList $param $serviceNames ]
+    if { [ llength $matches ] > 1 } {
+      puts "ERROR: more than one service matches your pattern"
+      puts "$param:"
+      puts "  $matches"
+      # Quit the script
+      return 1
+    } elseif { [ llength $matches ] < 1 } {
+      puts "ERROR: not able to find a suitable match for your service pattern: $param"
+      # Quit the script
+      return 1
+    }
+    lindex $matches 0
+  } ]
+
+  # Add local options to the subcommand, based on some conditions
+
+  if { [ llength $serviceParams ] eq 1 && $subCommand eq "logs" } {
+    set subCommandOpts [ string cat $subCommandOpts " --no-log-prefix" ]
+  }
+
+  # Prepare a docker compose command and execute, forwarding stdin and stdout correctly
+  # The extra `[list {*} ""]` is just for removing the redundant spaces
+
+  set dcCommand [ list {*}"$DOCKER_COMPOSE $DOCKER_COMPOSE_GLOBAL_OPTIONS $addedGlobalOptions $subCommand $subCommandOpts $serviceParams $executable" ]
+
+  puts $dcCommand
+  exec {*}$dcCommand 2>@stdout >@stdout <@stdin
+}
+
