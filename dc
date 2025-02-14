@@ -55,8 +55,9 @@ set SUB_COMMAND_ALIASSES [ dict create \
 ]
 
 # List of commands that exists
-
-set SUB_COMMANDS { start stop restart down up rm logs stats pull exec }
+# Sorted by length, then alphabetically
+# This makes taking the longest or shortest match easier
+set SUB_COMMANDS { rm up down exec logs pull stop start stats restart }
 
 # Dict of default parameters per subcommand
 
@@ -221,7 +222,7 @@ set subCommands [ split $subCommandArg "," ]
 
 foreach subCommandWithOpts $subCommands {
   set subCommandOpts ""
-  regexp {^(\w*)} $subCommandWithOpts -> subCommand
+  regexp {^([\w+-.]*)} $subCommandWithOpts -> subCommand
   regexp {\[(.*)\]} $subCommandWithOpts -> subCommandOpts
 
   # Match the subcommand to something docker compose understands
