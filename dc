@@ -1,6 +1,9 @@
 #!/bin/tclsh
 
 # TODO
+# -[ ] Document Tcl setup and the dependencies for this script
+# -[ ] Document the usage of this script, with all the below features
+# -[ ] Search with empty pattern gives no result
 # -[x] Use a `--` (or other special token) to forward all following input directly to `docker compose` (no further processing). The `--` is like a subcommand that forwards everything.
 #        dc -- logs --tail=1000 -f virtuoso
 #        same as: docker compose logs --tail=1000 -f virtuoso
@@ -178,7 +181,7 @@ foreach yamlDocument $yamlDocuments {
   set serviceNames [ concat $serviceNames [ dict keys $services ] ]
 }
 # Sort by length, then alphabetically
-# This makes taking the longest or shortest path easier
+# This makes taking the longest or shortest match easier
 set serviceNames [ lsort -command serviceNameCompare -unique $serviceNames ]
 
 # Parsing subcommand and arguments from command line
@@ -221,6 +224,7 @@ while { [ bracketsUnpaired $subCommandArg ] } {
 set subCommands [ split $subCommandArg "," ]
 
 foreach subCommandWithOpts $subCommands {
+  # Separate subcommand from its option with regexes
   set subCommandOpts ""
   regexp {^([\w+-.]*)} $subCommandWithOpts -> subCommand
   regexp {\[(.*)\]} $subCommandWithOpts -> subCommandOpts
