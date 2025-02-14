@@ -259,8 +259,6 @@ foreach subCommandWithOpts $subCommands {
   if { $subCommand eq "exec" } {
     set executable [ lrange $params 1 end ]
     set params [ lrange $params 0 0 ]
-    puts "Service snippet: $params"
-    puts "Executable: $executable"
   }
 
   # Finding services that match params
