@@ -34,6 +34,8 @@ What it can not do:
 
 ## Installation
 
+### Preparation
+
 This script is written in Tcl 8.6, and uses `libyaml`, a common YAML
 implementation in C. You should be able to install these easily on most common
 Linux distributions. For example:
@@ -48,10 +50,56 @@ apt install tcl libyaml-0-2
 # ...
 ```
 
-You also need to install the bindings for `libyaml` to Tcl. This is a lot
-trickier. Hopefully, this short guide below makes it work for you.
+You also need to install some dependencies and bindings for executing C code in
+Tcl. This is a lot trickier. Hopefully, this short guide below makes it work
+for you.
 
-// TODO, please forgive me for taking some time
+Prepare a folder to download, build and install some modules. The next sections
+will be executed in that folder.
+
+**Install CriTcl**
+
+Follow the installation guide
+[here](https://github.com/andreas-kupries/kettle/blob/master/embedded/md/doc/files/kettle_installer.md)
+or try these quick steps (you might need to run these with elevated privileges,
+depending on your system):
+
+```
+git clone https://github.com/andreas-kupries/critcl.git
+cd critcl
+tclsh ./build.tcl install    # or ./build.tcl install
+cd ..
+```
+
+**Install Kettle**
+
+Follow the installation guide
+[here](https://github.com/andreas-kupries/kettle/blob/master/embedded/md/doc/files/kettle_installer.md)
+or try these quick steps (you might need to run these with elevated privileges,
+depending on your system):
+
+```
+git clone https://github.com/andreas-kupries/kettle.git
+cd kettle
+tclsh ./kettle ./build.tcl install
+cd ..
+```
+
+**Install TclYAML**
+
+Follow the installation guide
+[here](https://github.com/andreas-kupries/tclyaml.git) or try these quick steps
+(you might need to run these with elevated privileges, depending on your
+system):
+
+```
+git clone https://github.com/andreas-kupries/tclyaml.git
+cd tclyaml
+tclsh ./build.tcl install    # or ./build.tcl install
+cd ..
+```
+
+### Install the `dc` script
 
 Put the `dc` script in your shell path. On Bash, you can quickly do this by
 adding something like the following line in `~/.bashrc`:
@@ -60,7 +108,19 @@ adding something like the following line in `~/.bashrc`:
 PATH=$HOME/Scripts/FolderWithTheDcScript:$PATH
 ```
 
-and don't forget to restart Bash :) .
+and don't forget to restart Bash :) . Also make sure that the script is
+executable:
+
+```
+chmod +x dc
+```
+
+Alternatively, you can make a link to the `dc` script from within a folder that
+already is inside your `PATH`:
+
+```
+ln -s /folder/in/PATH/dc /git/repo/for/DockerCuick/dc
+```
 
 ## Usage
 
