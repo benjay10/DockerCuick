@@ -1,9 +1,10 @@
 #!/bin/tclsh
 
 # TODO
-# -[ ] Document Tcl setup and the dependencies for this script
-# -[ ] Document the usage of this script, with all the below features
 # -[ ] Search with empty pattern gives no result
+# -[x] Document the need for a .env file
+# -[x] Document Tcl setup and the dependencies for this script
+# -[x] Document the usage of this script, with all the below features
 # -[x] Use a `--` (or other special token) to forward all following input directly to `docker compose` (no further processing). The `--` is like a subcommand that forwards everything.
 #        dc -- logs --tail=1000 -f virtuoso
 #        same as: docker compose logs --tail=1000 -f virtuoso

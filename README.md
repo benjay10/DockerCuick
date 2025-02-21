@@ -122,6 +122,20 @@ already is inside your `PATH`:
 ln -s /folder/in/PATH/dc /git/repo/for/DockerCuick/dc
 ```
 
+## Recommendations
+
+If you have multiple `docker-compose` project YAML files, say for example you
+also have a `docker-compose.overrides.yml`, you might want to make a `.env`
+file in the root of the Docker Compose project to allow the `dc` script to also
+search through those files for services. If not, the script will only look
+through the default `docker-compose.yml` file.
+
+An example `.env` file looks like this:
+
+```
+COMPOSE_FILE=docker-compose.yml:docker-compose.dev.yml:docker-compose.override.yml
+```
+
 ## Usage
 
 ### Grammar syntax
