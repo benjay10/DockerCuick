@@ -1,7 +1,7 @@
 #!/bin/tclsh
 
 # TODO
-# -[ ] Search with empty pattern gives no result
+# -[x] Search with empty pattern gives no result
 # -[x] Document the need for a .env file
 # -[x] Document Tcl setup and the dependencies for this script
 # -[x] Document the usage of this script, with all the below features
@@ -193,6 +193,9 @@ set params [ lrange $argv 1 end ]
 # Special functionality: search for service name or list them all (finishes the script here)
 if { $subCommandArg eq "?" } {
   puts "Searching for services. Your pattern(s) match(es) the following:"
+  if { $params eq "" } {
+    puts "  $serviceNames"
+  }
   foreach param $params {
     set matches [ matchInList $param $serviceNames ]
     puts "$param:"
