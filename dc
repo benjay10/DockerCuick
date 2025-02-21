@@ -1,40 +1,5 @@
 #!/bin/tclsh
 
-# TODO
-# -[x] Search with empty pattern gives no result
-# -[x] Document the need for a .env file
-# -[x] Document Tcl setup and the dependencies for this script
-# -[x] Document the usage of this script, with all the below features
-# -[x] Use a `--` (or other special token) to forward all following input directly to `docker compose` (no further processing). The `--` is like a subcommand that forwards everything.
-#        dc -- logs --tail=1000 -f virtuoso
-#        same as: docker compose logs --tail=1000 -f virtuoso
-# -[x] Parse the subcommands first via a dictionary, and then via the same type of matching with services, but on a list of subcommands.
-#      So 'a', 'art', 'sta', 'start' (, ...) are equivalent
-# -[x] When only one service given, can we use --no-log-prefix in the output for less columns and easier SPARQL copying?
-# -[x] Support the following syntax
-#        dc u,l virt dispat
-#        same as: dc u virt dispat ; dc l virt dispat
-#      (Multiple subcommands separated by a comma, all subcommands executed for all services in sequence)
-# -[x] Support the following syntax
-#        dc l(-t --no-log-prefix) vendor-d
-#        same as: docker compose logs --tail 1000 -f -t --no-log-prefix vendor-data-distribution
-#      (Arguments to the subcommand, directly forwarded to docker compose)
-# -[x] Support the following syntax
-#        dc e vendor-d curl -X POST http://localhost/healing
-#      (`dc exec` and the next tokens all need to be forwarded to docker compose, only one service is allowed)
-# -[x] Pattern 'modifiers' x, -, and .
-#      * Imagine the services: triplestore, publication-triplestore, migrations-publication-triplestore
-#      * The patters 'tri' would match all three
-#      * `-tri` would match the shortest service name, so triplestore
-#      * `+tri' would match the longest service name, so migrations-publication-triplestore
-#      * `.tri' would match the exact service name, so nothing in this case, but can be used as '.publication-triplestore' as the only way to address that service
-# -[x] Maybe support the following syntax
-#        dc ? virt log
-#      (multiple services for the search subcommand)
-# -[ ] Read files from -f command line arguments and ignore all the rest if they exist
-#      Or maybe not and force the user to have a proper `.env` file.
-
-
 package require Tcl 8.6
 package require tclyaml 0.5
 
