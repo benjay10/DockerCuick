@@ -13,7 +13,7 @@ set auto_path [ linsert $auto_path 0 $lib ]
 puts $auto_path
 
 package require Tcl 8.6
-package require tclyaml 0.5
+package require tclyaml 0.6
 
 # Constants
 
