@@ -139,7 +139,7 @@ Put the `dc` script in your shell path. On Bash, you can quickly do this by
 adding something like the following line in `~/.bashrc`:
 
 ```
-PATH=$HOME/Scripts/FolderWithTheDcScript:$PATH
+PATH=$HOME/git/repo/for/DockerCuick/:$PATH
 ```
 
 and don't forget to restart Bash :) . Also make sure that the script is
