@@ -1,7 +1,19 @@
 #!/bin/tclsh
 
+# Optionally use local "build" folder from the installation for finding the TclYAML package
+# Make sure that if this is started via a soft link, that the correct path is used: [info script] reports to be in the folder of the symlink instead of the original file.
+
+if { [ file type [ info script ] ] eq "link" } {
+  set script_path [ file dirname [ file join [ file dirname [ info script ] ] [ file readlink [ info script ] ] ] ]
+} {
+  set script_path [ file dirname [ file normalize [ info script ] ] ]
+}
+set lib [ file join $script_path build usr lib ]
+set auto_path [ linsert $auto_path 0 $lib ]
+puts $auto_path
+
 package require Tcl 8.6
-package require tclyaml 0.5
+package require tclyaml 0.6
 
 # Constants
 
@@ -250,9 +262,9 @@ foreach subCommandWithOpts $subCommands {
 
   # Add local options to the subcommand, based on some conditions
 
-  if { [ llength $serviceParams ] eq 1 && $subCommand eq "logs" } {
-    set subCommandOpts [ string cat $subCommandOpts " --no-log-prefix" ]
-  }
+  #if { [ llength $serviceParams ] eq 1 && $subCommand eq "logs" } {
+  #  set subCommandOpts [ string cat $subCommandOpts " --no-log-prefix" ]
+  #}
 
   # Prepare a docker compose command and execute, forwarding stdin and stdout correctly
   # The extra `[list {*} ""]` is just for removing the redundant spaces

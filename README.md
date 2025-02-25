@@ -51,13 +51,45 @@ apt install tcl libyaml-0-2
 ```
 
 You also need to install some dependencies and bindings for executing C code in
-Tcl. This is a lot trickier. Hopefully, this short guide below makes it work
-for you.
+Tcl. This is a lot trickier. Hopefully, the included installation script makes
+this work for you. If not, there is also the option to manual install them.
+Below are the intructions on using the installation scipt, followed by the
+alternative manual installation guide.
 
-Prepare a folder to download, build and install some modules. The next sections
-will be executed in that folder.
+#### Installation script
 
-**Install CriTcl**
+There is an `install.tcl` script in the root of this repository. This Tcl
+script will create a `src` and `build` directory inside the repository
+directory. The `src` directory will be used to clone the git repositories, and
+the built sources will be placed in the `build` directory. Make sure to execute
+the installation script whith this repository directory as your working
+directory, like so:
+
+```
+cd DockerCuick/
+tclsh ./install.tcl
+```
+
+After installation, you can remove the `src` directory if you really must, or
+you can leave it in place if you want to update the dependencies later. To
+update them, you just run the same script again. This will remove the `build`
+directory, `git pull` the source code and rebuild the needed packages.
+
+Don't remove the build directory. This directory contains the needed packages
+for the `dc` script. The script will refer to the `build` directory that is in
+the same directory, so you must always keep the `dc` script and the `build`
+directory in the same place.
+
+<details>
+
+<summary>
+<h4>Manual installation (requires root privileges)</h4>
+</summary>
+
+Prepare a directory to download, build and install some modules. The next
+sections will be executed in that directory.
+
+<h5>Install CriTcl</h5>
 
 Follow the installation guide
 [here](https://github.com/andreas-kupries/kettle/blob/master/embedded/md/doc/files/kettle_installer.md)
@@ -71,7 +103,7 @@ tclsh ./build.tcl install    # or ./build.tcl install
 cd ..
 ```
 
-**Install Kettle**
+<h5>Install Kettle</h5>
 
 Follow the installation guide
 [here](https://github.com/andreas-kupries/kettle/blob/master/embedded/md/doc/files/kettle_installer.md)
@@ -85,7 +117,7 @@ tclsh ./kettle ./build.tcl install
 cd ..
 ```
 
-**Install TclYAML**
+<h5>Install TclYAML</h5>
 
 Follow the installation guide
 [here](https://github.com/andreas-kupries/tclyaml.git) or try these quick steps
@@ -99,13 +131,15 @@ tclsh ./build.tcl install    # or ./build.tcl install
 cd ..
 ```
 
+</details>
+
 ### Install the `dc` script
 
 Put the `dc` script in your shell path. On Bash, you can quickly do this by
 adding something like the following line in `~/.bashrc`:
 
 ```
-PATH=$HOME/Scripts/FolderWithTheDcScript:$PATH
+PATH=$HOME/git/repo/for/DockerCuick/:$PATH
 ```
 
 and don't forget to restart Bash :) . Also make sure that the script is
@@ -115,8 +149,8 @@ executable:
 chmod +x dc
 ```
 
-Alternatively, you can make a link to the `dc` script from within a folder that
-already is inside your `PATH`:
+Alternatively, you can make a link to the `dc` script from within a directory
+that already is inside your `PATH`:
 
 ```
 ln -s /folder/in/PATH/dc /git/repo/for/DockerCuick/dc
