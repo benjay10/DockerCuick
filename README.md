@@ -86,8 +86,12 @@ directory in the same place.
 <h4>Manual installation (requires root privileges)</h4>
 </summary>
 
-Prepare a directory to download, build and install some modules. The next
-sections will be executed in that directory.
+If the included installation script fails, or if you want to install the
+dependencies system wide, use the steps below. Prepare a directory to download,
+build and install some modules. The next sections should be executed in that
+directory. These steps pull some git repositories, compile code or bundle
+scripts and then install the needed executables system wide (in `/usr/bin` and
+`/usr/lib`).
 
 <h5>Install CriTcl</h5>
 
@@ -198,8 +202,9 @@ simplest mode and build our way up.
 
 ### As an alias
 
-You can use this script almost as an alias for the long `docker compose`
-command. You can write
+You can use this script as an alias for the long `docker compose` command. Use
+a `--` and anything following will be forwarded to `docker compose` directly.
+For example, you can write
 
 ```
 dc -- up -d webapp
@@ -211,13 +216,21 @@ as a way to shorten the command
 docker compose up -d webapp
 ```
 
-In a sense, the `dc --` is equivalent to the `docker compose`.
+In a sense, the `dc --` is equivalent to `docker compose`.
+
+<details>
+
+<summary>
+<strong>Mnemonic</strong>
+</summary>
 
 As a mnemonic, think of the `--` as a way to signal the end of the options to
 the `dc` script and to prevent further interpretation. It will just forward
 whatever follows directly to the `docker compose` command. This mechanism is
 widely used throughought Bash builtin functions, the `grep` utility, and
 others.
+
+</details>
 
 ### To search services
 
@@ -254,8 +267,8 @@ services in your project that match your search `data`: `database`,
 `database` and `database-replicator`. You could then narrow it down to a single
 service by using `+datab`, with a plus symbol at the start of the pattern,
 which matches the longest servicename `database-replicator`. A minus symbol
-will match the shortest servicename. A period will only match the exact
-pattern: `.database` will only match `database` and will not match
+will match the shortest servicename. A period will match the exact pattern:
+`.database` will only match `database` and will not match
 `database-replicator`.
 
 **NOTE:** make sure to take a look at the "Reference" section below for "Search
@@ -333,8 +346,8 @@ rules are written. Let's look at some examples instead:
 dc u[-d],l web
 ```
 
-executes `up -d webapp` and `logs webapp`. The content of the `[]` is passed as
-options to the `up` subcommand.
+executes `up -d webapp` and `logs webapp`. The content between the `[]` is
+passed as options to the `up` subcommand.
 
 ```
 dc l[-f --tail 1000] web
@@ -346,13 +359,13 @@ executes `logs -f --tail 1000 webapp`. See how spaces are allowed whithin the
 **NOTE:** in the above two examples, the options passed to the subcommands are
 part of the defaults that are already passed to `docker compose` for those
 respective subcommands, but they serve as an easy example here. Refer to the
-"Reference" section below for a better overview.
+"Reference" section below for a better overview of default options.
 
 ### To execute a command in a service
 
 This is not so special, as it looks similar to the other modes. You can execute
 a command on a service, just like with the regular `docker compose`, but with
-the benefit of the matching on the command and the services. To execute a
+the benefit of the matching on the subcommand and the services. To execute a
 command, use
 
 ```
@@ -393,7 +406,7 @@ You can use these subcommands directly after the `dc` command.
 
 ### Subcommand aliases
 
-The `dc` command understands aliasses for subcommands as well as patterns that
+The `dc` command understands aliases for subcommands as well as patterns that
 uniquely match the subcommand. In the table below you can find the alias that
 corresponds to the full subcommand.
 
