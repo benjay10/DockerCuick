@@ -166,6 +166,14 @@ set serviceNames [ lsort -command serviceNameCompare -unique $serviceNames ]
 set subCommandArg [ lindex $argv 0 ]
 set params [ lrange $argv 1 end ]
 
+# Special functionality: only print the full command, do not execute it
+set noexec 0
+if { $subCommandArg eq "$" } {
+  set noexec 1
+  set subCommandArg [ lindex $params 0 ]
+  set params [ lrange $params 1 end ]
+}
+
 # Special functionality: search for service name or list them all (finishes the script here)
 if { $subCommandArg eq "?" } {
   puts "Searching for services. Your pattern(s) match(es) the following:"
@@ -271,6 +279,8 @@ foreach subCommandWithOpts $subCommands {
   set dcCommand [ list {*}"$DOCKER_COMPOSE $DOCKER_COMPOSE_GLOBAL_OPTIONS $addedGlobalOptions $subCommand $subCommandOpts $serviceParams $executable" ]
 
   puts $dcCommand
-  exec {*}$dcCommand 2>@stdout >@stdout <@stdin
+  if { $noexec != 1 } {
+    exec {*}$dcCommand 2>@stdout >@stdout <@stdin
+  }
 }
 
