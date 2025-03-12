@@ -381,6 +381,26 @@ dc e webapp curl -X POST http://localhost/request
 where there can only be one service name and all following terms form the
 command to be executed in that service.
 
+### To print the expanded command
+
+Sometimes you need to document a `docker compose` command or to execute the
+command on another computer that does not have the `dc` script installed. For
+example, you might need to pass deploy intructions to coworkers. For this, you
+can use a special mode that only prints your command and does not execute it.
+
+For example, type
+
+```
+dc u,l web
+```
+
+to get printed out
+
+```
+docker compose up -d webapp
+docker compose logs --tail 1000 -f --no-log-prefix webapp
+```
+
 ## Reference
 
 The following lines sum up all the possible syntaxes for the `dc` command.
@@ -388,8 +408,8 @@ The following lines sum up all the possible syntaxes for the `dc` command.
 ```
 dc -- {<docker compose subcommands and optional services>}
 dc ? {*<servicename>}...
-dc {a|o|r|u|d|s|l|p|*<subcommand>}[\[<options with spaces>\]][[,a|o|r|u|d|s|l|p|*<subcommand>][\[<options with spaces>\]]]... [*<servicename>]...
-dc {e|*exec} {*<servicename>} {<command with multiple options>}
+dc {$} {a|o|r|u|d|s|l|p|*<subcommand>}[\[<options with spaces>\]][[,a|o|r|u|d|s|l|p|*<subcommand>][\[<options with spaces>\]]]... [*<servicename>]...
+dc {$} {e|*exec} {*<servicename>} {<command with multiple options>}
 ```
 
 ### Supported subcommands
