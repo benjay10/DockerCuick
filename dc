@@ -269,9 +269,9 @@ foreach subCommandWithOpts $subCommands {
 
   # Add local options to the subcommand, based on some conditions
 
-  #if { [ llength $serviceParams ] eq 1 && $subCommand eq "logs" } {
-  #  set subCommandOpts [ string cat $subCommandOpts " --no-log-prefix" ]
-  #}
+  if { [ llength $serviceParams ] eq 1 && $subCommand eq "logs" } {
+    set subCommandOpts [ string cat $subCommandOpts " --no-log-prefix" ]
+  }
 
   # Prepare a docker compose command and execute, forwarding stdin and stdout correctly
   # The extra `[list {*} ""]` is just for removing the redundant spaces
