@@ -381,6 +381,26 @@ dc e webapp curl -X POST http://localhost/request
 where there can only be one service name and all following terms form the
 command to be executed in that service.
 
+### To print the expanded command
+
+Sometimes you need to document a `docker compose` command or to execute the
+command on another computer that does not have the `dc` script installed. For
+example, you might need to pass deploy intructions to coworkers. For this, you
+can use a special mode that only prints your command and does not execute it.
+
+For example, type
+
+```
+dc u,l web
+```
+
+to get printed out
+
+```
+docker compose up -d webapp
+docker compose logs --tail 1000 -f --no-log-prefix webapp
+```
+
 ## Reference
 
 The following lines sum up all the possible syntaxes for the `dc` command.
@@ -388,9 +408,31 @@ The following lines sum up all the possible syntaxes for the `dc` command.
 ```
 dc -- {<docker compose subcommands and optional services>}
 dc ? {*<servicename>}...
-dc {a|o|r|u|d|s|l|p|*<subcommand>}[\[<options with spaces>\]][[,a|o|r|u|d|s|l|p|*<subcommand>][\[<options with spaces>\]]]... [*<servicename>]...
-dc {e|*exec} {*<servicename>} {<command with multiple options>}
+dc {$} {a|o|r|u|d|s|l|p|*<subcommand>}[\[<options with spaces>\]][[,a|o|r|u|d|s|l|p|*<subcommand>][\[<options with spaces>\]]]... [*<servicename>]...
+dc {$} {e|*exec} {*<servicename>} {<command with multiple options>}
 ```
+
+### Normal operation
+
+Use the script with a subcommand and service names. A subcommand is an alias
+(defined in the table below) or a pattern that uniquely matches to a `docker
+compose` subcommand. A service name can be any pattern that uniquely matches to
+the name of a service. Search modifiers (see below) can be used for the
+services.
+
+When using the `exec` subcommand, there can only be one service pattern and the
+other arguments are directly used as part of the command sent to the service.
+
+### Special modes
+
+When the following characters are the first argument to the `dc` script, some
+special action are defined.
+
+* `--`: all following arguments are directly forwarded to `docker compose`, no
+  further processing is done.
+* `?`: search through services for the given patterns.
+* `$`: only prints the full command to the command line and does not execute
+  anything via `docker compose`.
 
 ### Supported subcommands
 
@@ -401,8 +443,6 @@ supported.
 ```
 rm up down exec logs pull stop start stats restart
 ```
-
-You can use these subcommands directly after the `dc` command.
 
 ### Subcommand aliases
 
@@ -428,6 +468,18 @@ means the `d` subcommand alias. You could still use the full subcommand `rm`.
 The `restart` subcommand is somewhat redundant, because it can be achieved with
 the subcommand alias sequence `o,a`, however, it is kept as an alias, because
 it is often used and the alias sequence is a bit annoying to type.
+
+### Supply arguments to subcommands
+
+When you need arguments applied for to certain subcommand, use `[]` with all
+the options in a list separated with spaces, directly after the subcommand they
+apply to. Do not use spaces outside the `[]` in the subcommands portion of the
+command.
+
+### Multiple subcommands at once
+
+To quickly chain `docker compose` commands, supply multiple subcommands
+separated by comma's. Extra options can still be applied.
 
 ### Subcommand default options
 
