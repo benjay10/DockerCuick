@@ -384,14 +384,14 @@ command to be executed in that service.
 ### To print the expanded command
 
 Sometimes you need to document a `docker compose` command or to execute the
-command on another computer that does not have the `dc` script installed. For
-example, you might need to pass deploy intructions to coworkers. For this, you
-can use a special mode that only prints your command and does not execute it.
+command on another computer that does not have the `dc` script installed. Maybe
+you might need to pass deploy intructions to coworkers. For this, you can use a
+special mode that only prints your command and does not execute it.
 
 For example, type
 
 ```
-dc u,l web
+dc $ u,l web
 ```
 
 to get printed out
@@ -431,7 +431,8 @@ special action are defined.
 * `--`: all following arguments are directly forwarded to `docker compose`, no
   further processing is done.
 * `?`: search through services for the given patterns.
-* `$`: only prints the full command to the command line and does not execute
+* `$`: followed by a subcommand and service patterns like a normal operation,
+  only prints the full command to the command line and does not execute
   anything via `docker compose`.
 
 ### Supported subcommands
