@@ -66,6 +66,9 @@ proc matchInList { param paramList } {
     set param [ string range $param 1 end ]
     set matches [ lsearch -glob -inline -all $paramList "*$param*" ]
     lrange $matches 0 0
+  } elseif { $firstCharacter eq "@" } {
+    set param [ string range $param 1 end ]
+    lsearch -glob -inline -all $paramList "*$param*"
   } else {
     lsearch -glob -inline -all $paramList "*$param*"
   }
@@ -251,9 +254,11 @@ foreach subCommandWithOpts $subCommands {
 
   # Finding services that match params
 
-  set serviceParams [ lmap param $params {
+  set serviceParams {}
+  foreach param $params {
     set matches [ matchInList $param $serviceNames ]
-    if { [ llength $matches ] > 1 } {
+    set firstCharacter [ string range $param 0 0 ]
+    if { [ llength $matches ] > 1 && $firstCharacter ne "@" } {
       puts "ERROR: more than one service matches your pattern"
       puts "$param:"
       puts "  $matches"
@@ -264,8 +269,10 @@ foreach subCommandWithOpts $subCommands {
       # Quit the script
       return 1
     }
-    lindex $matches 0
-  } ]
+    # Append service names, expand with {*} to flatten the list
+    # Multiple services possible with @
+    lappend serviceParams {*}$matches
+  }
 
   # Add local options to the subcommand, based on some conditions
 
