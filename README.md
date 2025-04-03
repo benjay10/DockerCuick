@@ -269,7 +269,9 @@ service by using `+datab`, with a plus symbol at the start of the pattern,
 which matches the longest servicename `database-replicator`. A minus symbol
 will match the shortest servicename. A period will match the exact pattern:
 `.database` will only match `database` and will not match
-`database-replicator`.
+`database-replicator`. Use a `@` search modifier to explicitely keep all
+matches (this is completely redundant when searching, but can come in handy
+when managing services).
 
 **NOTE:** make sure to take a look at the "Reference" section below for "Search
 modifiers" for narrowing down your searches.
@@ -506,14 +508,16 @@ below show these options for the conditions.
 In some cases, your search pattern for subcommands or services might give more
 than one result. You could give more characters to your search pattern to
 narrow down the search, but you could also use modifiers to choose the
-shortest, longest, or exact match. These modifiers are the first character of
-your subcommand or servicename search pattern.
+shortest, longest, exact match, or even to explicitely include all matches.
+These modifiers are the first character of your subcommand or servicename
+search pattern.
 
-| Modifier | Result                  |
-| -------- | ----------------------- |
-| +        | Longest match possible  |
-| .        | Exact match             |
-| -        | Shortest match possible |
+| Modifier | Result                          |
+| -------- | ------------------------------- |
+| +        | Longest match possible          |
+| .        | Exact match                     |
+| -        | Shortest match possible         |
+| @        | Explicitely include all matches |
 
 ## Limitations
 
